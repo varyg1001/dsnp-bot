@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher, executor, types
@@ -15,27 +14,33 @@ API_TOKEN = token
 logging.basicConfig(level=logging.INFO)
 
 parser = argparse.ArgumentParser(description='DSNPbot', prog='/check')
-parser.add_argument('-s', '--subtitles',
+parser.add_argument(
+    '-s', '--subtitles',
     type=str,
     default=None,
 )
-parser.add_argument('-a', '--audios',
+parser.add_argument(
+    '-a', '--audios',
     type=str,
     default=None,
 )
-parser.add_argument('-r', '--regions',
+parser.add_argument(
+    '-r', '--regions',
     type=str,
     default=None,
 )
-parser.add_argument('-q', '--quality',
+parser.add_argument(
+    '-q', '--quality',
     type=str,
     default=None,
 )
-parser.add_argument('-season',
+parser.add_argument(
+    '-season',
     type=str,
     default=None,
 )
-parser.add_argument("url",
+parser.add_argument(
+    "url",
     type=str,
     default=None,
 )
@@ -43,6 +48,7 @@ parser.add_argument("url",
 # Initialize bot and dispatcher
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
+
 
 @dp.message_handler(commands=["start", "help"])
 async def send_welcome(message: types.Message):
@@ -53,6 +59,7 @@ async def send_welcome(message: types.Message):
         "Hi!\nI'm a Disney Plus information grabber bot! If you want to know which series are available at a specific region, this bot is for you!"
     )
 
+
 @dp.message_handler(commands=["regions"])
 async def send_regions(message: types.Message):
     """
@@ -62,6 +69,7 @@ async def send_regions(message: types.Message):
         f"All the available regions ({len(bot.disney.regions)}):\n<code>{', '.join(bot.disney.regions)}</code>",
         parse_mode="html",
     )
+
 
 @dp.message_handler(commands=["check"])
 async def send_check(message: types.Message):

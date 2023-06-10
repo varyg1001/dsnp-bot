@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Optional
 import re
 
 from aiogram import types
 import aiohttp
 
-async def edit_text(sent_message: types.Message, message: str):
+
+async def edit_text(sent_message: types.Message, message: str) -> None:
     await sent_message.edit_text(
             message,
             parse_mode="html",
             disable_web_page_preview=True,
         )
+
 
 class Data():
 
@@ -23,18 +26,13 @@ class Data():
     def __init__(self, args, message) -> None:
         self.args: SimpleNamespace = args
         self.series: bool = True
-        self.id: str = self.get_id(self.args.url)
+        self.id: Optional[str] = self.get_id(self.args.url)
         self.quality: str = args.quality
-        if args.subtitles:
-            self.subtitles: set[str] =  set(args.subtitles.split(","))
-        else: self.subtitles = None
-        if args.audios:
-            self.audios: set[str] =  set(args.audios.split(","))
-        else: self.audios = None
-        self.message: type.Message = message
-        if args.regions:
-            self.regions_in: list[str] = args.regions.split(",")
-        else: self.regions_in = None
+        self.subtitles: Optional[set[str]] = set(args.subtitles.split(",")) if args.subtitles else None
+        self.audios: Optional[set[str]] = set(args.audios.split(",")) if args.audios else None
+        self.message = message
+        print(type(self.message))
+        self.regions_in: Optional[list[str]] = args.regions.split(",") if args.regions else None
 
         self.seasons = dict()
         self.regions_all = list()
@@ -46,7 +44,7 @@ class Data():
         self.advandec = self.subtitles or self.audios or False
 
     def get_id(self, url):
-        id: str = None
+        id: Optional[str] = None
         for regex in self.TITLE_RE:
             if m := re.search(regex, url):
                 if id:
@@ -61,7 +59,7 @@ class Data():
         return id
 
     @property
-    def render(self) -> list[str]:
+    def render(self) -> str:
         if self.series:
             seasons = sorted(self.seasons.items(), key=lambda x: x[1][2])
             return self.header + "\n".join([
@@ -108,8 +106,8 @@ class Data():
                                 self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>\n\n'
                             video_data = data.get("mediaMetadata")
                             quality: str = video_data["format"]
-                            audios: set = (x["language"] for x in video_data["audioTracks"])
-                            subtitles: set = (x["language"] for x in video_data["captions"] if x["trackType"] not in "FORCED")
+                            audios: set = set(x["language"] for x in video_data["audioTracks"])
+                            subtitles: set = set(x["language"] for x in video_data["captions"] if x["trackType"] not in "FORCED")
                             if self.quality and self.quality.upper() != quality:
                                 continue
                             if self.advandec:
@@ -130,7 +128,7 @@ class Data():
                         bot.logging.error(f"Failed to get series info {e}")
 
                 if (self.change == 1 or self.change > 6 or region == regions[-1].upper()) and self.regions:
-                    message = self.render
+                    message: str = self.render
                     if message != self.last_message:
                         await edit_text(self.message, message)
                         self.change = 2
@@ -140,7 +138,7 @@ class Data():
 class DisneyPlus():
 
     def __init__(self, bot) -> None:
-        self.session: aiohttp.ClientSession = None
+        self.session
         self.bot = bot
         self._regions = list()
 
