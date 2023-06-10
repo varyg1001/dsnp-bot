@@ -138,7 +138,7 @@ class Data():
 class DisneyPlus():
 
     def __init__(self, bot) -> None:
-        self.session
+        self.session = None
         self.bot = bot
         self._regions = list()
 
