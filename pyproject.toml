@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dsnpbot"
+version = "0.1.0"
+description = ""
+authors = ["varyg <88599103+varyg1001@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+aiogram = "^2.25.1"
+aiohttp = "^3.8.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
