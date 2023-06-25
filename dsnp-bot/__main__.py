@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import argparse
 import logging
+from typing import Optional
 
 from aiogram import Bot, Dispatcher, executor, types
 
 from disney import DisneyPlus, Data
 from config import token
-
-API_TOKEN = token
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
 
 class MyArgumentParser(argparse.ArgumentParser):
 
@@ -31,6 +27,11 @@ class MyArgumentParser(argparse.ArgumentParser):
         except SystemExit:
             pass
         return result
+
+API_TOKEN = token
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
 parser.add_argument(
@@ -101,7 +102,7 @@ async def send_check(message: types.Message):
     This handler will be called when user sends `/check` command
     """
 
-    message_in = message.get_args()
+    message_in: Optional[str] = message.get_args()
     args = parser.parse_args(message_in.split())
     if parser.error_message:
         await message.reply(parser.error_message)
