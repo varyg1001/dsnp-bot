@@ -82,25 +82,26 @@ async def send_check(message: types.Message):
     This handler will be called when user sends `/check` command
     """
 
-    args = message.get_args()
-
-    if args and "http" in args:
-        args = parser.parse_args(args.split())
-        if args.quality and args.quality.upper() not in ["SD", "HD", "UHD"]:
-            await message.reply("Error: Invalid quality!")
-        else:
-            bot.logging.info(f"URL: {args.url}")
-            sent_message: types.Message = await message.reply("Checking...")
-            data = Data(args, sent_message)
-            if data.id:
-                await bot.disney.get_available(data)
-                bot.logging.info(f"Finished: {data.id}")
+    try:
+        args = message.get_args()
+        if args and "http" in args:
+            args = parser.parse_args(args.split())
+            if args.quality and args.quality.upper() not in ["SD", "HD", "UHD"]:
+                await message.reply("Error: Invalid quality!")
             else:
-                await sent_message.edit_text("Error: Failed to get title id!")
-                bot.logging.warning("Error: Failed to get title id!")
-    else:
-        await message.reply("Error: No usable input!")
-
+                bot.logging.info(f"URL: {args.url}")
+                sent_message: types.Message = await message.reply("Checking...")
+                data = Data(args, sent_message)
+                if data.id:
+                    await bot.disney.get_available(data)
+                    bot.logging.info(f"Finished: {data.id}")
+                else:
+                    await sent_message.edit_text("Error: Failed to get title id!")
+                    bot.logging.warning("Error: Failed to get title id!")
+        else:
+            await message.reply("Error: No usable input!")
+    except Exception as e:
+        message.reply(e)
 
 if __name__ == '__main__':
     bot.logging = logging.getLogger("DSNPbot")
