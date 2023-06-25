@@ -13,7 +13,26 @@ API_TOKEN = token
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-parser = argparse.ArgumentParser(description='DSNPbot', prog='/check')
+class MyArgumentParser(argparse.ArgumentParser):
+
+    def __init__(self, *args, **kwargs):
+        super(MyArgumentParser, self).__init__(*args, **kwargs)
+
+        self.error_message = ''
+
+    def error(self, message):
+        self.error_message = message
+
+    def parse_args(self, *args, **kwargs):
+        # catch SystemExit exception to prevent closing the application
+        result = None
+        try:
+            result = super().parse_args(*args, **kwargs)
+        except SystemExit:
+            pass
+        return result
+
+parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
 parser.add_argument(
     '-s', '--subtitles',
     type=str,
@@ -82,26 +101,26 @@ async def send_check(message: types.Message):
     This handler will be called when user sends `/check` command
     """
 
-    try:
-        args = message.get_args()
-        if args and "http" in args:
-            args = parser.parse_args(args.split())
-            if args.quality and args.quality.upper() not in ["SD", "HD", "UHD"]:
-                await message.reply("Error: Invalid quality!")
-            else:
-                bot.logging.info(f"URL: {args.url}")
-                sent_message: types.Message = await message.reply("Checking...")
-                data = Data(args, sent_message)
-                if data.id:
-                    await bot.disney.get_available(data)
-                    bot.logging.info(f"Finished: {data.id}")
-                else:
-                    await sent_message.edit_text("Error: Failed to get title id!")
-                    bot.logging.warning("Error: Failed to get title id!")
+    message_in = message.get_args()
+    args = parser.parse_args(message_in.split())
+    if parser.error_message:
+        await message.reply(parser.error_message)
+    elif message_in and "http" in message_in:
+        if args.quality and args.quality.upper() not in ["SD", "HD", "UHD"]:
+            await message.reply("Error: Invalid quality!")
         else:
-            await message.reply("Error: No usable input!")
-    except Exception as e:
-        message.reply(e)
+            bot.logging.info(f"URL: {args.url}")
+            sent_message: types.Message = await message.reply("Checking...")
+            data = Data(args, sent_message)
+            if data.id:
+                await bot.disney.get_available(data)
+                bot.logging.info(f"Finished: {data.id}")
+            else:
+                await sent_message.edit_text("Error: Failed to get title id!")
+                bot.logging.warning("Error: Failed to get title id!")
+    else:
+        await message.reply("Error: No usable input!")
+
 
 if __name__ == '__main__':
     bot.logging = logging.getLogger("DSNPbot")
