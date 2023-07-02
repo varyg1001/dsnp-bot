@@ -75,13 +75,33 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.message_handler(commands=["start", "help"])
+@dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
     """
     This handler will be called when user sends `/start` or `/help` command
     """
     await message.reply(
         "Hi!\nI'm a Disney Plus information grabber bot! If you want to know which series are available at a specific region, this bot is for you!"
+    )
+
+@dp.message_handler(commands=["usage", "help"])
+async def send_welcome(message: types.Message):
+    """
+    This handler will be called when user sends `/usage` or `/help` command
+    """
+    await message.reply(
+        """Usage: /check [-r <regions>] [-s <num>] [-q <value>] [-a <lang>] [-s <lang>] <url>
+
+        Finds which regions a movie or series is available in on Disney+.
+        For TV shows, also returns a list of seasons and the number of matching episodes in each season.
+
+        --regions / -r: Comma-separated list of 2-letter country codes to limit the search to. Default is to check all regions.
+        --season: Limit search to the specified season(s). Default is to check all seasons.
+        -quality / -q: Only show movies/episodes that have the specified quality. Possible values are SD, HD, UHD.
+        -audio / -a: Only show movies/episodes that have the specified audio track (2-letter language code).
+        -subtitles / -s: Only show movies/episodes that have the specified subtitle track (2-letter language code).""",
+        parse_mode="html",
+        disable_web_page_preview=True,
     )
 
 
