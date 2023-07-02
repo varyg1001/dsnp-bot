@@ -90,16 +90,28 @@ async def send_welcome(message: types.Message):
     This handler will be called when user sends `/usage` or `/help` command
     """
     await message.reply(
-        """Usage: /check [-r <regions>] [-s <num>] [-q <value>] [-a <lang>] [-s <lang>] <url>
+"""
+<b>Usage:</b>
+<code>/check [-r &lt;regions&gt;] [-s &lt;num&gt;] [-q &lt;value&gt;] [-a &lt;lang&gt;] [-s &lt;lang&gt;] &lt;url&gt;</code>
 
-        Finds which regions a movie or series is available in on Disney+.
-        For TV shows, also returns a list of seasons and the number of matching episodes in each season.
+Finds which regions a movie or series is available in on Disney+.
+For TV shows, also returns a list of seasons and the number of matching episodes in each season.
 
-        --regions / -r: Comma-separated list of 2-letter country codes to limit the search to. Default is to check all regions.
-        --season: Limit search to the specified season(s). Default is to check all seasons.
-        -quality / -q: Only show movies/episodes that have the specified quality. Possible values are SD, HD, UHD.
-        -audio / -a: Only show movies/episodes that have the specified audio track (2-letter language code).
-        -subtitles / -s: Only show movies/episodes that have the specified subtitle track (2-letter language code).""",
+<b>Options:</b>
+<code>-r </code>/<code> --regions</code>
+Comma-separated list of 2-letter country codes to limit the search to. Default is to check all regions.
+<code>--season</code>
+Limit search to the specified season(s). Default is to check all seasons.
+<code>-q </code>/<code> --quality</code>
+Only show movies/episodes that have the specified quality. Possible values are SD, HD, UHD.
+<code>-a </code>/<code> --audio</code>
+Only show movies/episodes that have the specified audio track (2-letter language code).
+<code>-s </code>/<code> --subtitles</code>
+Only show movies/episodes that have the specified subtitle track (2-letter language code).
+
+<b>Example:</b>
+<code>/check -r hu,en -s hu -a hu https://www.disneyplus.com/hu-hu/series/548-nap-egy-szekta-fogsagaban/7bwY59faYVNN</code>
+""",
         parse_mode="html",
         disable_web_page_preview=True,
     )
