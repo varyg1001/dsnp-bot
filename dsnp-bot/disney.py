@@ -3,9 +3,22 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Optional, Any
 import re
+import sys
+from io import StringIO
 
 from aiogram import types
 import aiohttp
+from rich.progress import (
+    Task,
+    Progress,
+    BarColumn,
+    TextColumn,
+    ProgressColumn,
+    TaskProgressColumn,
+    MofNCompleteColumn,
+    TimeRemainingColumn,
+    TaskID
+)
 
 
 async def edit_text(sent_message: types.Message, message: str) -> None:
@@ -39,6 +52,8 @@ class Data():
         self.change: int = 0
         self.header: str = ""
         self.last_message: str = ""
+        self.checked = [0, 0]
+        self.progress_string: str = ""
 
         self.advandec = self.subtitles or self.audios or False
 
@@ -59,6 +74,13 @@ class Data():
 
     @property
     def render(self) -> str:
+        if self.checked[0] != self.checked[1]:
+            front: str = f"🕐 Checking regions... {self.checked[0]}/{self.checked[1]} ({(self.checked[0]/self.checked[1]):.0%})\n\n{self.header}\n\n"
+        else:
+            front: str = f"✅ Checked {self.checked[0]} (100%)\n\n{self.header}\n\n"
+
+        available: str = f"Available in {len(self.regions)} regions:\n\n"
+
         if self.series:
             seasons = sorted(self.seasons.items(), key=lambda x: x[1][2])
 
@@ -67,11 +89,11 @@ class Data():
                     return " - full"
                 return f"/{num}" if self.advandec else ""
 
-            return self.header + "\n".join([
+            return front + available + "\n".join([
                 (f"<code>{', '.join(season[1][0])}</code>  –  " + f'{",  ".join(f"<b>{x[0]}</b> ({x[1]}{get_ad(x[2], x[1])})" for x in season[1][1])}') for season in seasons
             ])
         else:
-            return self.header + f"<code>{', '.join(self.regions)}</code>  –  ({len(self.regions_all)}{f'/{len(self.regions)}' if self.advandec  else ''})"
+            return front + available + f"<code><b>{', '.join(self.regions)}</b></code>"
 
     def add(self, region: str) -> None:
         self.regions.append(region)
@@ -101,7 +123,15 @@ class Data():
     async def get_series(self, regions: list[str], session: Any, bot) -> None:
         if self.regions_in:
             regions = self.regions_in
-        for region in regions:
+        self.checked[1] = len(regions) - 1
+
+        #pb = Progress('[', BarColumn(bar_width=10), ']',  '{task.description}', '[magenta]{task.percentage:>3.0f}%', TimeRemainingColumn(), refresh_per_second=3)
+        #task = pb.add_task('', total=self.checked[1])
+                
+        #with pb:
+        for n, region in enumerate(regions): 
+            #pb.update(task_id=task, advance=1, description=f"{n}/{self.checked[1]} checked")
+            self.checked[0] = n
             region = region.upper()
             async with session.get("https://disney.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
                 if self.series:
@@ -131,7 +161,7 @@ class Data():
                             self.regions_all.append(region)
                             if not self.header:
                                 title = data["text"]["title"]
-                                self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>\n\n'
+                                self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
                             video_data = data.get("mediaMetadata")
                             quality: str = video_data["format"]
                             audios: set = set(x["language"] for x in video_data["audioTracks"])
