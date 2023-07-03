@@ -56,6 +56,7 @@ class Data():
         self.progress_string: str = ""
 
         self.advandec = self.subtitles or self.audios or False
+        self.all = (self.subtitles and self.audios) or False
 
     def get_id(self, url):
         id: Optional[str] = None
@@ -81,16 +82,21 @@ class Data():
 
         available: str = f"Available in {len(self.regions)} regions:\n\n"
 
+        def get_sub(num, size):
+            if self.advandec:
+                mes = list()
+                mes.append(f"{num[0]}/{size}" if self.all or (self.audios and not self.subtitles) else '')
+                mes.append(f"{num[1]}/{size} - full" if self.all or (not self.audios and self.subtitles) else '')
+                mes.append(f"{num[2]}/{size} - forced" if num[2] != 0 and (self.all or (not self.audios and self.subtitles)) else '')
+                return ", ".join(x for x in mes if x)
+            else:
+                return size
+
         if self.series:
             seasons = sorted(self.seasons.items(), key=lambda x: x[1][2])
 
-            def get_ad(num, size):
-                if size == num:
-                    return " - full"
-                return f"/{num}" if self.advandec else ""
-
             return front + available + "\n".join([
-                (f"<code>{', '.join(season[1][0])}</code>  –  " + f'{",  ".join(f"<b>{x[0]}</b> ({x[1]}{get_ad(x[2], x[1])})" for x in season[1][1])}') for season in seasons
+                (f"<code>{', '.join(season[1][0])}</code>  –  " + f'{",  ".join(f"<b>{x[0]}</b> ({get_sub(x[2], x[1])})" for x in season[1][1])}') for season in seasons
             ])
         else:
             return front + available + f"<code><b>{', '.join(self.regions)}</b></code>"
@@ -101,24 +107,24 @@ class Data():
 
     async def get_lang(self, session, region, id):
         async with session.get(f"https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1") as req:
-            ep_num: int = 0
+            audio: int = 0
+            forced: int = 0
+            sub: int = 0
             data_full = (await req.json()).get("data", {}).get("DmcEpisodes", {}).get("videos", {})
             if data_full:
                 for video in data_full:
                     video_data = video["mediaMetadata"]
                     quality: str = video_data["format"]
-                    audios: set = set(x["language"] for x in video_data["audioTracks"])
-                    subtitles: set = set(x["language"] for x in video_data["captions"] if x["trackType"] not in "FORCED")
-                    if self.subtitles and self.audios:
-                        if self.subtitles.issubset(subtitles) and self.audios.issubset(audios):
-                            ep_num += 1
-                    elif self.subtitles and not self.audios:
-                        if self.subtitles.issubset(subtitles):
-                            ep_num += 1
-                    elif self.audios and not self.subtitles:
-                        if self.audios.issubset(audios):
-                            ep_num += 1
-            return ep_num
+                    audios: set = set((x["language"] if "-" not in x["language"] else x["language"].split("-")[0]) for x in video_data["audioTracks"])
+                    subtitles: set = set((x["language"] if "-" not in x["language"] else x["language"].split("-")[0]) for x in video_data["captions"] if x["trackType"] in ("NORMAL", "SDH"))
+                    subtitles_forced: set = set(x["language"] for x in video_data["captions"] if x["trackType"] == "FORCED")
+                    if self.audios and self.audios.issubset(audios):
+                        audio += 1
+                    if self.subtitles and self.subtitles.issubset(subtitles):
+                        sub += 1
+                    if self.subtitles and self.subtitles.issubset(subtitles_forced):
+                        forced += 1
+            return (audio, sub, forced)
 
     async def get_series(self, regions: list[str], session: Any, bot) -> None:
         if self.regions_in:
@@ -134,8 +140,9 @@ class Data():
             self.checked[0] = n
             region = region.upper()
             async with session.get("https://disney.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
+                subtitles = set()
+                subtitles_forced = set()
                 if self.series:
-
                     try:
                         data_full = (await req.json()).get("data", {}).get("DmcSeriesBundle", {})
                         if data := data_full.get("seasons", {}).get("seasons", []):
@@ -143,7 +150,7 @@ class Data():
                             self.regions.append(region)
                             if not self.header:
                                 title = data_full["episodes"]["videos"][0]["text"]["title"]
-                                self.header = f'<a href="https://disneyplus.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>\n\n'
+                                self.header = f'<a href="https://disneyplus.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
                             eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data]
                             if str(eps) in self.seasons.keys():
                                 self.seasons[str(eps)][0].append(region)
@@ -165,15 +172,16 @@ class Data():
                             video_data = data.get("mediaMetadata")
                             quality: str = video_data["format"]
                             audios: set = set(x["language"] for x in video_data["audioTracks"])
-                            subtitles: set = set(x["language"] for x in video_data["captions"] if x["trackType"] not in "FORCED")
+                            subtitles = set(x["language"] for x in video_data["captions"] if x["trackType"] != "FORCED")
+                            subtitles_forced: set = set(x["language"] for x in video_data["captions"] if x["trackType"] == "FORCED")
                             if self.quality and self.quality.upper() != quality:
                                 continue
                             if self.advandec:
                                 if self.subtitles and self.audios:
-                                    if self.subtitles.issubset(subtitles) and self.audios.issubset(audios):
+                                    if (self.subtitles.issubset(subtitles) or self.subtitles.issubset(subtitles_forced)) and self.audios.issubset(audios):
                                         self.add(region)
                                 elif self.subtitles and not self.audios:
-                                    if self.subtitles.issubset(subtitles):
+                                    if self.subtitles.issubset(subtitles) or self.subtitles.issubset(subtitles_forced):
                                         self.add(region)
                                 elif self.audios and not self.subtitles:
                                     if self.audios.issubset(audios):

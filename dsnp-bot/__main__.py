@@ -33,43 +33,6 @@ API_TOKEN = token
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
-parser.add_argument(
-    '-s', '--subtitles',
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    '-l', '--meta-lang',
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    '-a', '--audios',
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    '-r', '--regions',
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    '-q', '--quality',
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    '-season',
-    type=str,
-    default=None,
-)
-parser.add_argument(
-    "url",
-    type=str,
-    default=None,
-)
-
 # Initialize bot and dispatcher
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
@@ -134,10 +97,48 @@ async def send_check(message: types.Message):
     This handler will be called when user sends `/check` command
     """
 
+    parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
+    parser.add_argument(
+        '-s', '--subtitles',
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        '-l', '--meta-lang',
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        '-a', '--audios',
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        '-r', '--regions',
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        '-q', '--quality',
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        '-season',
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
+        "url",
+        type=str,
+        default=None,
+    )
+
     message_in: Optional[str] = message.get_args()
     args = parser.parse_args(message_in.split())
     if parser.error_message:
-        await message.reply(parser.error_message)
+        await message.reply(parser.error_message, disable_web_page_preview=True)
+        del message_in
     elif message_in and "http" in message_in:
         if args.quality and args.quality.upper() not in ["SD", "HD", "UHD"]:
             await message.reply("Error: Invalid quality!")
