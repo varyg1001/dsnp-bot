@@ -125,6 +125,7 @@ class Data():
                     pb.update(task_id=t, advance=1, description=f"{n}/{len(regions)}")
                     console.print(pb)
                     bar_str = console.export_text().strip()
+                    bot.logging.info(bar_str.split(' '))
                     bar, number, percentage, eta  = bar_str.split(' ')
                     if 'first_half_char_reached' not in locals() and ('╸' in bar or '╺' in bar):
                         first_half_char_reached = True
