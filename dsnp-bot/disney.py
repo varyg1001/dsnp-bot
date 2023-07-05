@@ -3,22 +3,11 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Optional, Any
 import re
-import sys
-from io import StringIO
 
 from aiogram import types
 import aiohttp
-from rich.progress import (
-    Task,
-    Progress,
-    BarColumn,
-    TextColumn,
-    ProgressColumn,
-    TaskProgressColumn,
-    MofNCompleteColumn,
-    TimeRemainingColumn,
-    TaskID
-)
+from rich.console import Console
+from rich.progress import BarColumn, Progress, TaskID, TimeRemainingColumn
 
 
 async def edit_text(sent_message: types.Message, message: str) -> None:
@@ -75,12 +64,8 @@ class Data():
 
     @property
     def render(self) -> str:
-        if self.checked[0] != self.checked[1]:
-            front: str = f"🕐 Checking regions... {self.checked[0]}/{self.checked[1]} ({(self.checked[0]/self.checked[1]):.0%})\n\n{self.header}\n\n"
-        else:
-            front: str = f"✅ Checked {self.checked[0]} (100%)\n\n{self.header}\n\n"
 
-        available: str = f"Available in {len(self.regions)} regions:\n\n"
+        available: str = f"\n\nAvailable in {len(self.regions)} regions:\n\n"
 
         def get_sub(num, size):
             if self.advandec:
@@ -95,11 +80,11 @@ class Data():
         if self.series:
             seasons = sorted(self.seasons.items(), key=lambda x: x[1][2])
 
-            return front + available + "\n".join([
+            return self.progress_string + available + "\n".join([
                 (f"<code>{', '.join(season[1][0])}</code>  –  " + f'{",  ".join(f"<b>{x[0]}</b> ({get_sub(x[2], x[1])})" for x in season[1][1])}') for season in seasons
             ])
         else:
-            return front + available + f"<code><b>{', '.join(self.regions)}</b></code>"
+            return self.progress_string + available + f"<code><b>{', '.join(self.regions)}</b></code>"
 
     def add(self, region: str) -> None:
         self.regions.append(region)
@@ -130,75 +115,91 @@ class Data():
         if self.regions_in:
             regions = self.regions_in
         self.checked[1] = len(regions) - 1
-
-        #pb = Progress('[', BarColumn(bar_width=10), ']',  '{task.description}', '[magenta]{task.percentage:>3.0f}%', TimeRemainingColumn(), refresh_per_second=3)
-        #task = pb.add_task('', total=self.checked[1])
+        console = Console(record=True, width=100)
+        pb = Progress(BarColumn(bar_width=10),  '{task.description}', '[magenta]{task.percentage:>3.2f}%', TimeRemainingColumn(), refresh_per_second=3)
+        t = pb.add_task('', total=self.checked[1])
                 
-        #with pb:
-        for n, region in enumerate(regions): 
-            #pb.update(task_id=task, advance=1, description=f"{n}/{self.checked[1]} checked")
-            self.checked[0] = n
-            region = region.upper()
-            async with session.get("https://disney.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
-                subtitles = set()
-                subtitles_forced = set()
-                if self.series:
-                    try:
-                        data_full = (await req.json()).get("data", {}).get("DmcSeriesBundle", {})
-                        if data := data_full.get("seasons", {}).get("seasons", []):
-                            self.regions_all.append(region)
-                            self.regions.append(region)
-                            if not self.header:
-                                title = data_full["episodes"]["videos"][0]["text"]["title"]
-                                self.header = f'<a href="https://disneyplus.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
-                            eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data]
-                            if str(eps) in self.seasons.keys():
-                                self.seasons[str(eps)][0].append(region)
-                            else:
-                                self.seasons[str(eps)] = ([region], eps, sum(x[1] for x in eps))
-                            self.change += 1
-                    except Exception as e:
-                        bot.logging.error(f"Failed to get series info {e}")
+        with pb:
+            for n, region in enumerate(regions, start=1):
+                with console.capture() as capture:
+                    pb.update(task_id=t, advance=1, description=f"{n}/{len(regions)}")
+                    console.print(pb)
+                    bar_str = console.export_text().strip()
+                    bar, number, percentage, eta  = bar_str.split(' ')
+                    if 'first_half_char_reached' not in locals() and ('╸' in bar or '╺' in bar):
+                        first_half_char_reached = True
+                    if 'first_half_char_reached' in locals():
+                        if bar.startswith('╸'):
+                            bar = bar.replace('━', ' ')
+                        bar = re.sub(r'━+', lambda m: '█' * len(m.group(0)), bar, count=1)
+                    else:
+                        bar = bar.replace('━', ' ')
+                    bar = bar.replace('━', ' ').replace('╸', '▌').replace('╺', ' ')
+                    bar = f"[{bar}]"
+                self.progress_string = f'{bar} {number} region ({percentage}) {eta if eta.startswith("1") else eta.replace("0:", "", 1)}'
 
-                else:
-
-                    try:
-                        data = (await req.json()).get("data", {}).get("DmcVideoBundle", {}).get("video", {})
-                        if data:
-                            self.regions_all.append(region)
-                            if not self.header:
-                                title = data["text"]["title"]
-                                self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
-                            video_data = data.get("mediaMetadata")
-                            quality: str = video_data["format"]
-                            audios: set = set(x["language"] for x in video_data["audioTracks"])
-                            subtitles = set(x["language"] for x in video_data["captions"] if x["trackType"] != "FORCED")
-                            subtitles_forced: set = set(x["language"] for x in video_data["captions"] if x["trackType"] == "FORCED")
-                            if self.quality and self.quality.upper() != quality:
-                                continue
-                            if self.advandec:
-                                if self.subtitles and self.audios:
-                                    if (self.subtitles.issubset(subtitles) or self.subtitles.issubset(subtitles_forced)) and self.audios.issubset(audios):
-                                        self.add(region)
-                                elif self.subtitles and not self.audios:
-                                    if self.subtitles.issubset(subtitles) or self.subtitles.issubset(subtitles_forced):
-                                        self.add(region)
-                                elif self.audios and not self.subtitles:
-                                    if self.audios.issubset(audios):
-                                        self.add(region)
-                            else:
+                self.checked[0] = n
+                region = region.upper()
+                async with session.get("https://disney.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
+                    subtitles = set()
+                    subtitles_forced = set()
+                    if self.series:
+                        try:
+                            data_full = (await req.json()).get("data", {}).get("DmcSeriesBundle", {})
+                            if data := data_full.get("seasons", {}).get("seasons", []):
+                                self.regions_all.append(region)
+                                self.regions.append(region)
+                                if not self.header:
+                                    title = data_full["episodes"]["videos"][0]["text"]["title"]
+                                    self.header = f'<a href="https://disneyplus.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
+                                eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data]
+                                if str(eps) in self.seasons.keys():
+                                    self.seasons[str(eps)][0].append(region)
+                                else:
+                                    self.seasons[str(eps)] = ([region], eps, sum(x[1] for x in eps))
                                 self.change += 1
-                                self.regions = self.regions_all
+                        except Exception as e:
+                            bot.logging.error(f"Failed to get series info {e}")
 
-                    except Exception as e:
-                        bot.logging.error(f"Failed to get series info {e}")
+                    else:
 
-                if (self.change == 1 or self.change > 6 or region == regions[-1].upper()) and self.regions:
-                    message: str = self.render
-                    if message != self.last_message:
-                        await edit_text(self.message, message)
-                        self.change = 2
-                        self.last_message = message
+                        try:
+                            data = (await req.json()).get("data", {}).get("DmcVideoBundle", {}).get("video", {})
+                            if data:
+                                self.regions_all.append(region)
+                                if not self.header:
+                                    title = data["text"]["title"]
+                                    self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
+                                video_data = data.get("mediaMetadata")
+                                quality: str = video_data["format"]
+                                audios: set = set(x["language"] for x in video_data["audioTracks"])
+                                subtitles = set(x["language"] for x in video_data["captions"] if x["trackType"] != "FORCED")
+                                subtitles_forced: set = set(x["language"] for x in video_data["captions"] if x["trackType"] == "FORCED")
+                                if self.quality and self.quality.upper() != quality:
+                                    continue
+                                if self.advandec:
+                                    if self.subtitles and self.audios:
+                                        if (self.subtitles.issubset(subtitles) or self.subtitles.issubset(subtitles_forced)) and self.audios.issubset(audios):
+                                            self.add(region)
+                                    elif self.subtitles and not self.audios:
+                                        if self.subtitles.issubset(subtitles) or self.subtitles.issubset(subtitles_forced):
+                                            self.add(region)
+                                    elif self.audios and not self.subtitles:
+                                        if self.audios.issubset(audios):
+                                            self.add(region)
+                                else:
+                                    self.change += 1
+                                    self.regions = self.regions_all
+
+                        except Exception as e:
+                            bot.logging.error(f"Failed to get series info {e}")
+
+                    if (self.change == 1 or self.change > 6 or region == regions[-1].upper()) and self.regions:
+                        message: str = self.render
+                        if message != self.last_message:
+                            await edit_text(self.message, message)
+                            self.change = 2
+                            self.last_message = message
 
 
 class DisneyPlus():
