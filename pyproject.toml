@@ -9,7 +9,6 @@ readme = "README.md"
 python = "^3.11"
 aiogram = "^2.25.1"
 aiohttp = "^3.8.4"
-rich = "^13.4.2"
 
 
 [build-system]
