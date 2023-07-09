@@ -73,7 +73,7 @@ class Data():
         else:
             bar = f"{filled_char * int(filled_length)}{empty_char * (10 - int(filled_length))}"
 
-        return "▌" + bar + "▌"
+        return "█" + bar + "█"
 
     @property
     def render(self) -> str:
