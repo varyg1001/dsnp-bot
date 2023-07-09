@@ -82,7 +82,7 @@ class Data():
         else:
             front: str = f"✅ Checked {self.checked[0]} (100%)\n\n{self.header}\n\n"
 
-        available: str = f"\n\nAvailable in {len(self.regions)} regions:\n\n"
+        available: str = f"Available in {len(self.regions)} regions:\n\n"
 
         def get_sub(num, size):
             if self.advandec:
@@ -135,13 +135,14 @@ class Data():
             regions = self.regions_in
         self.checked[1] = len(regions) - 1
                 
-        for n, region in enumerate(regions, start=1):
+        for n, region in enumerate(regions):
 
             self.checked[0] = n
             region = region.upper()
             async with session.get("https://disney.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
                 subtitles = set()
                 subtitles_forced = set()
+
                 if self.series:
                     try:
                         data_full = (await req.json()).get("data", {}).get("DmcSeriesBundle", {})
