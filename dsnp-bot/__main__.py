@@ -63,13 +63,13 @@ For TV shows, also returns a list of seasons and the number of matching episodes
 <b>Options:</b>
 <code>-r </code>/<code> --regions</code>
 Comma-separated list of 2-letter country codes to limit the search to. Default is to check all regions.
-<code>--season</code>
-Limit search to the specified season(s). Default is to check all seasons.
+<code>-s </code>/<code> --season</code>
+Limit search to the specified season(s). Default is to check all seasons. (Examples: -s 1, -s 1-2)
 <code>-q </code>/<code> --quality</code>
 Only show movies/episodes that have the specified quality. Possible values are SD, HD, UHD.
-<code>-a </code>/<code> --audio</code>
+<code>-al </code>/<code> --alang</code>
 Only show movies/episodes that have the specified audio track (2-letter language code).
-<code>-s </code>/<code> --subtitles</code>
+<code>-sl </code>/<code> --slang</code>
 Only show movies/episodes that have the specified subtitle track (2-letter language code).
 
 <b>Example:</b>
