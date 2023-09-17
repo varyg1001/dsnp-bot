@@ -99,17 +99,17 @@ async def send_check(message: types.Message):
 
     parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
     parser.add_argument(
-        '-s', '--subtitles',
+        '-sl', '--slang',
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-l', '--meta-lang',
+        '-al', '--alang',
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-a', '--audios',
+        '-ml', '--mlang',
         type=str,
         default=None,
     )
@@ -124,7 +124,7 @@ async def send_check(message: types.Message):
         default=None,
     )
     parser.add_argument(
-        '-season',
+        '-s', '--seasons',
         type=str,
         default=None,
     )

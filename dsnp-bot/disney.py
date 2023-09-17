@@ -8,7 +8,6 @@ from aiogram import types
 import aiohttp
 
 
-
 async def edit_text(sent_message: types.Message, message: str) -> None:
     await sent_message.edit_text(
             message,
@@ -29,10 +28,12 @@ class Data():
         self.series: bool = True
         self.id: Optional[str] = self.get_id(self.args.url)
         self.quality: str = args.quality
-        self.subtitles: Optional[set[str]] = set(args.subtitles.split(",")) if args.subtitles else None
-        self.audios: Optional[set[str]] = set(args.audios.split(",")) if args.audios else None
+        self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
+        self.audios: Optional[set[str]] = self.args_to_set(args.alang)
         self.message = message
         self.regions_in: Optional[list[str]] = args.regions.split(",") if args.regions else None
+        self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
+        self.mlang: Optional[str] = args.mlang
 
         self.seasons = dict()
         self.regions_all = list()
@@ -45,6 +46,18 @@ class Data():
 
         self.advandec = self.subtitles or self.audios or False
         self.all = (self.subtitles and self.audios) or False
+
+    def seasons_to_list(self, args: str) -> Optional[list[int]]:
+        if not args:
+            return None
+        elif "-" in args:
+            start, end = args.split("-")
+            return [int(start), int(end) + 1]
+        else:
+            return [int(args), int(args) + 1]
+
+    def args_to_set(self, args: str) -> Optional[set[str]]:
+        return set(args.split(",")) if args else None
 
     def get_id(self, url):
         id: Optional[str] = None
@@ -133,9 +146,9 @@ class Data():
     async def get_series(self, regions: list[str], session: Any, bot) -> None:
         if self.regions_in:
             regions = self.regions_in
-        self.checked[1] = len(regions) - 1
-                
-        for n, region in enumerate(regions):
+        self.checked[1] = len(regions)
+
+        for n, region in enumerate(regions, start=1):
 
             self.checked[0] = n
             region = region.upper()
@@ -152,17 +165,17 @@ class Data():
                             if not self.header:
                                 title = data_full["episodes"]["videos"][0]["text"]["title"]
                                 self.header = f'<a href="https://disneyplus.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
-                            eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data]
-                            if str(eps) in self.seasons.keys():
-                                self.seasons[str(eps)][0].append(region)
-                            else:
-                                self.seasons[str(eps)] = ([region], eps, sum(x[1] for x in eps))
+                            eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data if not self.seasons_in or x["seasonSequenceNumber"] in range(self.seasons_in[0], self.seasons_in[1])]
+                            if eps:
+                                if str(eps) in self.seasons.keys():
+                                    self.seasons[str(eps)][0].append(region)
+                                else:
+                                    self.seasons[str(eps)] = ([region], eps, sum(x[1] for x in eps))
                             self.change += 1
                     except Exception as e:
-                        bot.logging.error(f"Failed to get series info {e}")
+                        bot.logging.error(f"Failed to get series info: {e}")
 
                 else:
-
                     try:
                         data = (await req.json()).get("data", {}).get("DmcVideoBundle", {}).get("video", {})
                         if data:
