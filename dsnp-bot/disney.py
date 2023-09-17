@@ -76,8 +76,8 @@ class Data():
 
     def generate_progress_bar(self, value, maximum):
         filled_length: float = 10 * value / maximum
-        filled_char: str = '█'
-        end_char: str = '▌'
+        filled_char: str = '━'
+        end_char: str = '╸'
         empty_char: str = ' '
         bar: str = ""
 
@@ -86,7 +86,7 @@ class Data():
         else:
             bar = f"{filled_char * int(filled_length)}{empty_char * (10 - int(filled_length))}"
 
-        return bar
+        return '<code>[' + bar + ']</code>'
 
     @property
     def render(self) -> str:
