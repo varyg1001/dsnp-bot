@@ -55,7 +55,7 @@ async def send_welcome(message: types.Message):
     await message.reply(
 """
 <b>Usage:</b>
-<code>/check [-r &lt;regions&gt;] [-s &lt;num&gt;] [-q &lt;value&gt;] [-a &lt;lang&gt;] [-s &lt;lang&gt;] &lt;url&gt;</code>
+<code>/check [-r &lt;regions&gt;] [-s &lt;num&gt;] [-q &lt;value&gt;] [-al &lt;lang&gt;] [-sl &lt;lang&gt;] &lt;url&gt;</code>
 
 Finds which regions a movie or series is available in on Disney+.
 For TV shows, also returns a list of seasons and the number of matching episodes in each season.
