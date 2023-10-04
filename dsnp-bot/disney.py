@@ -16,10 +16,12 @@ async def edit_text(sent_message: types.Message, message: str) -> None:
         )
 
 
+disneysite: bool = True
+
 class Data():
 
     TITLE_RE: list = [
-        r"^https?://(?:www\.)?(?:preview\.)?(disneyplus|starplus)\.com(?:/[a-z0-9-]+){,2}/(?P<type>movies|series)(?:/[a-zA-Z0-9%_-]+)?/(?P<id>[a-zA-Z0-9]{12})",
+        r"^https?://(?:www\.)?(?:preview\.)?(?P<site>disneyplus|starplus)\.com(?:/[a-z0-9-]+){,2}/(?P<type>movies|series)(?:/[a-zA-Z0-9%_-]+)?/(?P<id>[a-zA-Z0-9]{12})",
         r"^https?://(?:www\.)?dsny\.pl/library/[a-zA-Z]{2}(?:/[a-zA-Z]{2})?/(?P<id>[a-zA-Z0-9]{12})",
     ]
 
@@ -28,7 +30,6 @@ class Data():
         self.bot = bot
 
         self.args: SimpleNamespace = args
-        self.series: bool = True
         self.id: Optional[str] = self.get_id(self.args.url)
         self.quality: str = args.quality
         self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
@@ -38,6 +39,7 @@ class Data():
         self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
         self.mlang: Optional[str] = args.mlang
 
+        self.: bool = True
         self.seasons = dict()
         self.regions_all = list()
         self.regions = list()
@@ -72,6 +74,8 @@ class Data():
                     break
                 if m.group("type") == "movies":
                     self.series = False
+                if m.group("site") == "starplus":
+                    disneysite = False
                 id = m.group("id")
                 break
 
@@ -235,7 +239,12 @@ class DisneyPlus():
             }
         )
 
-        async with self.session.get("https://cdn.registerdisney.go.com/jgc/v8/client/DTCI-DISNEYPLUS.GC.WEB-PROD/configuration/site") as req:
+        async with self.session.get(
+                url=f"https://cdn.registerdisney.go.com/jgc/v8/client/DTCI-{['DISNEYPLUS', 'STARPLUS'][disneysite]}.GC.WEB-PROD/configuration/site",
+                params={
+                    "langPref": "en",
+                },
+            ) as req:
             try:
                 self._regions = (await req.json()).get("data", {}).get("compliance", {}).get("countries", [])
             except Exception as e:
