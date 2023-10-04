@@ -16,7 +16,7 @@ async def edit_text(sent_message: types.Message, message: str) -> None:
         )
 
 
-disneysite: bool = False
+disneysite: bool = True
 
 class Data():
 
@@ -75,7 +75,7 @@ class Data():
                 if m.group("type") == "movies":
                     self.series = False
                 if m.group("site") == "starplus":
-                    disneysite = True
+                    disneysite = False
                 id = m.group("id")
                 break
 
@@ -159,7 +159,7 @@ class Data():
 
             self.checked[0] = n
             region = region.upper()
-            async with session.get("https://{['disney', 'star'][disneysite]}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
+            async with session.get("https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], site=['disney', 'star'][disneysite], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
                 subtitles = set()
                 subtitles_forced = set()
 
@@ -240,10 +240,7 @@ class DisneyPlus():
         )
 
         async with self.session.get(
-                url=f"https://cdn.registerdisney.go.com/jgc/v8/client/DTCI-{['DISNEYPLUS', 'STARPLUS'][disneysite]}.GC.WEB-PROD/configuration/site",
-                params={
-                    "langPref": "en",
-                },
+                f"https://cdn.registerdisney.go.com/jgc/v8/client/DTCI-DISNEYPLUS.GC.WEB-PROD/configuration/site",
             ) as req:
             try:
                 self._regions = (await req.json()).get("data", {}).get("compliance", {}).get("countries", [])
