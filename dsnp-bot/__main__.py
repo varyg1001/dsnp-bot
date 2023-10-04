@@ -157,6 +157,7 @@ async def send_check(message: types.Message):
                     await sent_message.edit_text("Error: Failed to get title id!")
                     bot.logging.warning("Error: Failed to get title id!")
             except Exception as e:
+                await message.reply(parser.error_message, disable_web_page_preview=True)
                 bot.logging.error(f"Error: {e}")
     else:
         await message.reply("Error: No usable input!")
