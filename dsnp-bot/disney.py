@@ -26,21 +26,17 @@ class Data():
     def __init__(self, args, message, bot) -> None:
         
         self.bot = bot
-        
-        try:
-            self.args: SimpleNamespace = args
-            self.series: bool = True
-            self.id: Optional[str] = self.get_id(self.args.url)
-            self.quality: str = args.quality
-            self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
-            self.audios: Optional[set[str]] = self.args_to_set(args.alang)
-            self.message = message
-            self.regions_in: Optional[list[str]] = args.regions.split(",") if args.regions else None
-            self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
-            self.mlang: Optional[str] = args.mlang
-        except Exception as e:
-            self.bot.logging.error(f"Error: {e}")
-            return
+
+        self.args: SimpleNamespace = args
+        self.series: bool = True
+        self.id: Optional[str] = self.get_id(self.args.url)
+        self.quality: str = args.quality
+        self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
+        self.audios: Optional[set[str]] = self.args_to_set(args.alang)
+        self.message = message
+        self.regions_in: Optional[list[str]] = args.regions.split(",") if args.regions else None
+        self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
+        self.mlang: Optional[str] = args.mlang
 
         self.seasons = dict()
         self.regions_all = list()

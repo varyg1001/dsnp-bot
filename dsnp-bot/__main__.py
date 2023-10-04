@@ -148,13 +148,16 @@ async def send_check(message: types.Message):
         else:
             bot.logging.info(f"URL: {args.url}")
             sent_message: types.Message = await message.reply("Checking...")
-            data = Data(args, sent_message, bot)
-            if data.id:
-                await bot.disney.get_available(data)
-                bot.logging.info(f"Finished: {data.id}")
-            else:
-                await sent_message.edit_text("Error: Failed to get title id!")
-                bot.logging.warning("Error: Failed to get title id!")
+            try:
+                data = Data(args, sent_message, bot)
+                if data.id:
+                    await bot.disney.get_available(data)
+                    bot.logging.info(f"Finished: {data.id}")
+                else:
+                    await sent_message.edit_text("Error: Failed to get title id!")
+                    bot.logging.warning("Error: Failed to get title id!")
+            except Exception as e:
+                bot.logging.error(f"Error: {e}")
     else:
         await message.reply("Error: No usable input!")
 
