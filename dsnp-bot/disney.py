@@ -40,6 +40,7 @@ class Data():
             self.mlang: Optional[str] = args.mlang
         except Exception as e:
             self.bot.logging.error(f"Error: {e}")
+            return
 
         self.seasons = dict()
         self.regions_all = list()
