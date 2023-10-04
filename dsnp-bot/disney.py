@@ -16,7 +16,7 @@ async def edit_text(sent_message: types.Message, message: str) -> None:
         )
 
 
-disneysite: bool = True
+disneysite: bool = False
 
 class Data():
 
@@ -75,7 +75,7 @@ class Data():
                 if m.group("type") == "movies":
                     self.series = False
                 if m.group("site") == "starplus":
-                    disneysite = False
+                    disneysite = True
                 id = m.group("id")
                 break
 
