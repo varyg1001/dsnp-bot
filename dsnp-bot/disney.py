@@ -19,7 +19,7 @@ async def edit_text(sent_message: types.Message, message: str) -> None:
 class Data():
 
     TITLE_RE: list = [
-        r"^https?://(?:www\.)?(?:preview\.)?disneyplus\.com(?:/[a-z0-9-]+){,2}/(?P<type>movies|series)(?:/[a-zA-Z0-9%_-]+)?/(?P<id>[a-zA-Z0-9]{12})",
+        r"^https?://(?:www\.)?(?:preview\.)?(disneyplus|starplus)\.com(?:/[a-z0-9-]+){,2}/(?P<type>movies|series)(?:/[a-zA-Z0-9%_-]+)?/(?P<id>[a-zA-Z0-9]{12})",
         r"^https?://(?:www\.)?dsny\.pl/library/[a-zA-Z]{2}(?:/[a-zA-Z]{2})?/(?P<id>[a-zA-Z0-9]{12})",
     ]
 
