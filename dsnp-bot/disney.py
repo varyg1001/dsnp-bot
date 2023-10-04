@@ -130,7 +130,7 @@ class Data():
         self.change += 1
 
     async def get_lang(self, session, region, id):
-        async with session.get(f"https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1") as req:
+        async with session.get(f"https://{['disney', 'star'][disneysite]}.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1") as req:
             audio: int = 0
             forced: int = 0
             sub: int = 0
@@ -159,7 +159,7 @@ class Data():
 
             self.checked[0] = n
             region = region.upper()
-            async with session.get("https://disney.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
+            async with session.get("https://{['disney', 'star'][disneysite]}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
                 subtitles = set()
                 subtitles_forced = set()
 
@@ -171,7 +171,7 @@ class Data():
                             self.regions.append(region)
                             if not self.header:
                                 title = data_full["episodes"]["videos"][0]["text"]["title"]
-                                self.header = f'<a href="https://disneyplus.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
+                                self.header = f'<a href="https://{["disneyplus", "starplus"][disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
                             eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data if not self.seasons_in or x["seasonSequenceNumber"] in range(self.seasons_in[0], self.seasons_in[1])]
                             if eps:
                                 if str(eps) in self.seasons.keys():
@@ -189,7 +189,7 @@ class Data():
                             self.regions_all.append(region)
                             if not self.header:
                                 title = data["text"]["title"]
-                                self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
+                                self.header = f'<a href="https://{["disneyplus", "starplus"][disneysite]}.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
                             video_data = data.get("mediaMetadata")
                             quality: str = video_data["format"]
                             audios: set = set(x["language"] for x in video_data["audioTracks"])
