@@ -23,17 +23,23 @@ class Data():
         r"^https?://(?:www\.)?dsny\.pl/library/[a-zA-Z]{2}(?:/[a-zA-Z]{2})?/(?P<id>[a-zA-Z0-9]{12})",
     ]
 
-    def __init__(self, args, message) -> None:
-        self.args: SimpleNamespace = args
-        self.series: bool = True
-        self.id: Optional[str] = self.get_id(self.args.url)
-        self.quality: str = args.quality
-        self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
-        self.audios: Optional[set[str]] = self.args_to_set(args.alang)
-        self.message = message
-        self.regions_in: Optional[list[str]] = args.regions.split(",") if args.regions else None
-        self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
-        self.mlang: Optional[str] = args.mlang
+    def __init__(self, args, message, bot) -> None:
+        
+        self.bot = bot
+        
+        try:
+            self.args: SimpleNamespace = args
+            self.series: bool = True
+            self.id: Optional[str] = self.get_id(self.args.url)
+            self.quality: str = args.quality
+            self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
+            self.audios: Optional[set[str]] = self.args_to_set(args.alang)
+            self.message = message
+            self.regions_in: Optional[list[str]] = args.regions.split(",") if args.regions else None
+            self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
+            self.mlang: Optional[str] = args.mlang
+        except Exception as e:
+            self.bot.logging.error(f"Error: {e}")
 
         self.seasons = dict()
         self.regions_all = list()
@@ -143,7 +149,7 @@ class Data():
                         forced += 1
             return (audio, sub, forced)
 
-    async def get_series(self, regions: list[str], session: Any, bot) -> None:
+    async def get_series(self, regions: list[str], session: Any) -> None:
         if self.regions_in:
             regions = self.regions_in
         self.checked[1] = len(regions)
@@ -173,7 +179,7 @@ class Data():
                                     self.seasons[str(eps)] = ([region], eps, sum(x[1] for x in eps))
                             self.change += 1
                     except Exception as e:
-                        bot.logging.error(f"Failed to get series info: {e}")
+                        self.bot.logging.error(f"Failed to get series info: {e}")
 
                 else:
                     try:
@@ -205,7 +211,7 @@ class Data():
                                 self.regions = self.regions_all
 
                     except Exception as e:
-                        bot.logging.error(f"Failed to get series info {e}")
+                        self.bot.logging.error(f"Failed to get series info {e}")
 
                 if (self.change == 1 or self.change > 6 or region == regions[-1].upper()) and self.regions:
                     message: str = self.render
@@ -243,6 +249,6 @@ class DisneyPlus():
         return self._regions
 
     async def get_available(self, data: Data) -> None:
-        await data.get_series(self._regions, self.session, self.bot)
+        await data.get_series(self._regions, self.session)
         if not data.regions:
             await edit_text(data.message, "Not available in any region.")

@@ -75,7 +75,7 @@ Only show movies/episodes that have the specified audio track (2-letter language
 Only show movies/episodes that have the specified subtitle track (2-letter language code).
 
 <b>Example:</b>
-<code>/check -r hu,en -s hu -a hu https://www.disneyplus.com/hu-hu/series/548-nap-egy-szekta-fogsagaban/7bwY59faYVNN</code>
+<code>/check -r hu,en -sl hu -al hu https://www.disneyplus.com/hu-hu/series/548-nap-egy-szekta-fogsagaban/7bwY59faYVNN</code>
 """,
         parse_mode="html",
         disable_web_page_preview=True,
@@ -148,7 +148,7 @@ async def send_check(message: types.Message):
         else:
             bot.logging.info(f"URL: {args.url}")
             sent_message: types.Message = await message.reply("Checking...")
-            data = Data(args, sent_message)
+            data = Data(args, sent_message, bot)
             if data.id:
                 await bot.disney.get_available(data)
                 bot.logging.info(f"Finished: {data.id}")
