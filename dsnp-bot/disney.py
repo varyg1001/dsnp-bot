@@ -16,7 +16,7 @@ async def edit_text(sent_message: types.Message, message: str) -> None:
         )
 
 
-disneysite: bool = True
+disneysite: bool = False
 
 class Data():
 
@@ -75,7 +75,7 @@ class Data():
                 if m.group("type") == "movies":
                     self.series = False
                 if m.group("site") == "starplus":
-                    disneysite = False
+                    disneysite = True
                 id = m.group("id")
                 break
 
@@ -189,7 +189,7 @@ class Data():
                             self.regions_all.append(region)
                             if not self.header:
                                 title = data["text"]["title"]
-                                self.header = f'<a href="https://{["disneyplus", "starplus"][disneysite]}.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
+                                self.header = f'<a href="https://disneyplus.com/movies/{title["slug"]["program"]["default"]["content"]}/{self.id}">{title["full"]["program"]["default"]["content"]}</a>'
                             video_data = data.get("mediaMetadata")
                             quality: str = video_data["format"]
                             audios: set = set(x["language"] for x in video_data["audioTracks"])
