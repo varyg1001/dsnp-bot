@@ -39,7 +39,7 @@ class Data():
         self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
         self.mlang: Optional[str] = args.mlang
 
-        self.: bool = True
+        self.series: bool = True
         self.seasons = dict()
         self.regions_all = list()
         self.regions = list()
