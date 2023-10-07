@@ -41,9 +41,10 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
     """
-    This handler will be called when user sends `/start` or `/help` command
+    This handler will be called when user sends `/start` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
+    bot.logging.info(f'Commands: start')
     await message.reply(
         "Hi!\nI'm a Disney Plus information grabber bot! If you want to know which series are available at a specific region, this bot is for you!"
     )
@@ -54,6 +55,7 @@ async def send_welcome(message: types.Message):
     This handler will be called when user sends `/usage` or `/help` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
+    bot.logging.info(f'Commands: usage')
     await message.reply(
 """
 <b>Usage:</b>
@@ -88,6 +90,7 @@ async def send_regions(message: types.Message):
     This handler will be called when user sends `/regions` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
+    bot.logging.info(f'Commands: regions')
     await message.reply(
         f"All the available regions ({len(bot.disney.regions)}):\n<code>{', '.join(bot.disney.regions)}</code>",
         parse_mode="html",
@@ -100,6 +103,7 @@ async def send_check(message: types.Message):
     This handler will be called when user sends `/check` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
+    bot.logging.info(f'Commands: check')
     parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
     parser.add_argument(
         '-sl', '--slang',

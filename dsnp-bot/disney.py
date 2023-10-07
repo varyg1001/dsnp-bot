@@ -16,8 +16,6 @@ async def edit_text(sent_message: types.Message, message: str) -> None:
         )
 
 
-disneysite: bool = False
-
 class Data():
 
     TITLE_RE: list = [
@@ -72,10 +70,8 @@ class Data():
                     # More than one match
                     id = None
                     break
-                if m.group("type") == "movies":
-                    self.series = False
-                if m.group("site") == "starplus":
-                    disneysite = True
+                self.series = m.group("type") == "movies"
+                self.disneysite = m.group("site") == "starplus"
                 id = m.group("id")
                 break
 
@@ -102,7 +98,7 @@ class Data():
         else:
             front: str = f"✅ Checked {self.checked[0]} (100%)\n\n{self.header}\n\n"
 
-        available: str = f"Available in {len(self.regions)} regions:\n\n"
+        available: str = f"Available in {len(self.regions)} regions\n\n"
 
         def get_sub(num, size):
             if self.advandec:
@@ -130,7 +126,7 @@ class Data():
         self.change += 1
 
     async def get_lang(self, session, region, id):
-        async with session.get(f"https://{['disney', 'star'][disneysite]}.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1") as req:
+        async with session.get(f"https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1") as req:
             audio: int = 0
             forced: int = 0
             sub: int = 0
@@ -159,7 +155,7 @@ class Data():
 
             self.checked[0] = n
             region = region.upper()
-            async with session.get("https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], site=['disney', 'star'][disneysite], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
+            async with session.get("https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], site=['disney', 'star'][self.disneysite], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
                 subtitles = set()
                 subtitles_forced = set()
 
@@ -171,7 +167,7 @@ class Data():
                             self.regions.append(region)
                             if not self.header:
                                 title = data_full["episodes"]["videos"][0]["text"]["title"]
-                                self.header = f'<a href="https://{["disneyplus", "starplus"][disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
+                                self.header = f'<a href="https://{["disneyplus", "starplus"][self.disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
                             eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data if not self.seasons_in or x["seasonSequenceNumber"] in range(self.seasons_in[0], self.seasons_in[1])]
                             if eps:
                                 if str(eps) in self.seasons.keys():
