@@ -37,7 +37,6 @@ class Data():
         self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
         self.mlang: Optional[str] = args.mlang
 
-        self.series: bool = True
         self.seasons = dict()
         self.regions_all = list()
         self.regions = list()
@@ -70,8 +69,8 @@ class Data():
                     # More than one match
                     id = None
                     break
-                self.series = m.group("type") == "movies"
-                self.disneysite = m.group("site") == "starplus"
+                self.series: bool = m.group("type") == "series"
+                self.disneysite: bool = m.group("site") == "disneyplus"
                 id = m.group("id")
                 break
 
@@ -146,7 +145,7 @@ class Data():
                         forced += 1
             return (audio, sub, forced)
 
-    async def get_series(self, regions: list[str], session: Any) -> None:
+    async def get_data(self, regions: list[str], session: Any) -> None:
         if self.regions_in:
             regions = self.regions_in
         self.checked[1] = len(regions)
@@ -155,7 +154,7 @@ class Data():
 
             self.checked[0] = n
             region = region.upper()
-            async with session.get("https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], site=['disney', 'star'][self.disneysite], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
+            async with session.get("https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(type=["DmcVideoBundle", "DmcSeriesBundle"][self.series], site=['star', 'disney'][self.disneysite], region=region, encoded=["FamilyId", "SeriesId"][self.series], id=self.id)) as req:
                 subtitles = set()
                 subtitles_forced = set()
 
@@ -167,7 +166,7 @@ class Data():
                             self.regions.append(region)
                             if not self.header:
                                 title = data_full["episodes"]["videos"][0]["text"]["title"]
-                                self.header = f'<a href="https://{["disneyplus", "starplus"][self.disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
+                                self.header = f'<a href="https://{["starplus", "disneyplus"][self.disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
                             eps: list = [(x["seasonSequenceNumber"], x["episodes_meta"]["hits"], await self.get_lang(session, region, x["seasonId"])) for x in data if not self.seasons_in or x["seasonSequenceNumber"] in range(self.seasons_in[0], self.seasons_in[1])]
                             if eps:
                                 if str(eps) in self.seasons.keys():
@@ -248,6 +247,6 @@ class DisneyPlus():
         return self._regions
 
     async def get_available(self, data: Data) -> None:
-        await data.get_series(self._regions, self.session)
+        await data.get_data(self._regions, self.session)
         if not data.regions:
             await edit_text(data.message, "Not available in any region.")
