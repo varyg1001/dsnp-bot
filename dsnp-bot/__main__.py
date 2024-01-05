@@ -7,14 +7,14 @@ from typing import Optional
 from aiogram import Bot, Dispatcher, executor, types
 
 from disney import DisneyPlus, Data
-from config import token
+from config import token, users, groups
+
 
 class MyArgumentParser(argparse.ArgumentParser):
-
     def __init__(self, *args, **kwargs):
         super(MyArgumentParser, self).__init__(*args, **kwargs)
 
-        self.error_message = ''
+        self.error_message = ""
 
     def error(self, message):
         self.error_message = message
@@ -28,7 +28,10 @@ class MyArgumentParser(argparse.ArgumentParser):
             pass
         return result
 
+
 API_TOKEN = token
+USERS = users
+GROUPS = groups
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,16 +41,22 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
+async def start(commands, message: types.Message):
+    bot.logging.info(f"Commands: {commands}")
+    print(message)
+
+
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
     """
     This handler will be called when user sends `/start` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info(f'Commands: start')
+    bot.logging.info("Commands: start")
     await message.reply(
         "Hi!\nI'm a Disney Plus information grabber bot! If you want to know which series are available at a specific region, this bot is for you!"
     )
+
 
 @dp.message_handler(commands=["usage", "help"])
 async def send_welcome(message: types.Message):
@@ -55,9 +64,9 @@ async def send_welcome(message: types.Message):
     This handler will be called when user sends `/usage` or `/help` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info(f'Commands: usage')
+    bot.logging.info("Commands: usage")
     await message.reply(
-"""
+        """
 <b>Usage:</b>
 <code>/check [-r &lt;regions&gt;] [-s &lt;num&gt;] [-q &lt;value&gt;] [-al &lt;lang&gt;] [-sl &lt;lang&gt;] &lt;url&gt;</code>
 
@@ -90,7 +99,7 @@ async def send_regions(message: types.Message):
     This handler will be called when user sends `/regions` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info(f'Commands: regions')
+    bot.logging.info("Commands: regions")
     await message.reply(
         f"All the available regions ({len(bot.disney.regions)}):\n<code>{', '.join(bot.disney.regions)}</code>",
         parse_mode="html",
@@ -103,35 +112,43 @@ async def send_check(message: types.Message):
     This handler will be called when user sends `/check` command
     """
     bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info(f'Commands: check')
-    parser = MyArgumentParser(argparse.ArgumentParser(description='DSNPbot', prog='/check'))
+    bot.logging.info(f"Commands: check")
+    parser = MyArgumentParser(
+        argparse.ArgumentParser(description="DSNPbot", prog="/check")
+    )
     parser.add_argument(
-        '-sl', '--slang',
+        "-sl",
+        "--slang",
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-al', '--alang',
+        "-al",
+        "--alang",
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-ml', '--mlang',
+        "-ml",
+        "--mlang",
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-r', '--regions',
+        "-r",
+        "--regions",
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-q', '--quality',
+        "-q",
+        "--quality",
         type=str,
         default=None,
     )
     parser.add_argument(
-        '-s', '--seasons',
+        "-s",
+        "--seasons",
         type=str,
         default=None,
     )
@@ -170,7 +187,7 @@ async def send_check(message: types.Message):
         await message.reply("Error: No usable input!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     bot.logging = logging.getLogger("DSNPbot")
     bot.disney = DisneyPlus(bot)
     executor.start_polling(dp, on_startup=bot.disney.init_session)
