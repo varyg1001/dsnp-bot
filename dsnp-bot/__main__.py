@@ -41,10 +41,28 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-async def start(commands, message: types.Message):
-    bot.logging.info(f"Commands: {commands}")
-    print(message)
+async def log(commands, message: types.Message):
+    group_name = message.get("chat", {}).get("title")
+    from_user = message.get("from", {})
 
+    if group_name := message.get("chat", {}).get("title"):
+        bot.logging.info(f"Group name: {group_name}")
+    if from_user := message.get("from", {}):
+        bot.logging.info(f'User: {from_user.get("username") or from_user.get("first_name")}')
+
+    bot.logging.info(f"Commands: {commands}")
+
+
+async def eligible(commands, message: types.Message):
+    await log(commands, message)
+
+    if (chat := message.get("chat")) and chat.get("id") in GROUPS:
+        return True
+    elif (from_user := message.get("from")) and from_user.get("id") in USERS:
+        return True
+    else:
+        await message.reply("You are not eligible to use this bot!")
+        return False
 
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
@@ -59,12 +77,12 @@ async def send_welcome(message: types.Message):
 
 
 @dp.message_handler(commands=["usage", "help"])
-async def send_welcome(message: types.Message):
+async def send_help(message: types.Message):
     """
     This handler will be called when user sends `/usage` or `/help` command
     """
-    bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info("Commands: usage")
+    await log("help", message)
+
     await message.reply(
         """
 <b>Usage:</b>
@@ -98,8 +116,8 @@ async def send_regions(message: types.Message):
     """
     This handler will be called when user sends `/regions` command
     """
-    bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info("Commands: regions")
+    await log("help", message)
+
     await message.reply(
         f"All the available regions ({len(bot.disney.regions)}):\n<code>{', '.join(bot.disney.regions)}</code>",
         parse_mode="html",
@@ -111,8 +129,10 @@ async def send_check(message: types.Message):
     """
     This handler will be called when user sends `/check` command
     """
-    bot.logging.info(f'User: {message["from"]["username"]}')
-    bot.logging.info(f"Commands: check")
+    is_ligible = await eligible("regions", message)
+    if not is_ligible:
+        return False
+
     parser = MyArgumentParser(
         argparse.ArgumentParser(description="DSNPbot", prog="/check")
     )
@@ -158,7 +178,7 @@ async def send_check(message: types.Message):
         default=None,
     )
 
-    message_in: Optional[str] = message.get_args()
+    message_in: str = message.get_args() or ""
     args = parser.parse_args(message_in.split())
     if parser.error_message:
         await message.reply(parser.error_message, disable_web_page_preview=True)
