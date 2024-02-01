@@ -129,7 +129,7 @@ async def send_check(message: types.Message):
     """
     This handler will be called when user sends `/check` command
     """
-    is_ligible = await eligible("regions", message)
+    is_ligible = await eligible("check", message)
     if not is_ligible:
         return False
 
