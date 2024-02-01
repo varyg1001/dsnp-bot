@@ -42,13 +42,13 @@ dp = Dispatcher(bot)
 
 
 async def log(commands, message: types.Message):
-    group_name = message.get("chat", {}).get("title")
-    from_user = message.get("from", {})
+    group_name = message["chat"]["title"]
+    from_user = message["from"]
 
-    if group_name := message.get("chat", {}).get("title"):
+    if group_name := message["chat"]["title"]:
         bot.logging.info(f"Group name: {group_name}")
-    if from_user := message.get("from", {}):
-        bot.logging.info(f'User: {from_user.get("username") or from_user.get("first_name")}')
+    if from_user := message["from"]:
+        bot.logging.info(f'User: {from_user["username"] or from_user["first_name"]}')
 
     bot.logging.info(f"Commands: {commands}")
 
