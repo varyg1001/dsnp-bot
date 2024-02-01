@@ -45,7 +45,7 @@ async def log(commands, message: types.Message):
     from_user = message["from"]
 
     if group_name := message["chat"]["title"]:
-        bot.logging.info(f"Group name: {group_name}")
+        bot.logging.info(f"Group: {group_name}")
     if from_user := message["from"]:
         bot.logging.info(f'User: {from_user["username"] or from_user["first_name"]}')
 
