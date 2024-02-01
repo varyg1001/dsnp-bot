@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-from typing import Optional
 
 from aiogram import Bot, Dispatcher, executor, types
 
@@ -63,6 +62,7 @@ async def eligible(commands, message: types.Message):
     else:
         await message.reply("You are not eligible to use this bot!")
         return False
+
 
 @dp.message_handler(commands=["start"])
 async def send_welcome(message: types.Message):
