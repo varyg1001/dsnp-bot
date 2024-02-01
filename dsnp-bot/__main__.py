@@ -56,9 +56,9 @@ async def log(commands, message: types.Message):
 async def eligible(commands, message: types.Message):
     await log(commands, message)
 
-    if (chat := message.get("chat")) and chat.get("id") in GROUPS:
+    if message["chat"]["id"] in GROUPS:
         return True
-    elif (from_user := message.get("from")) and from_user.get("id") in USERS:
+    elif message["from"]["id"] in USERS:
         return True
     else:
         await message.reply("You are not eligible to use this bot!")
