@@ -27,6 +27,8 @@ class Data:
 
         self.args: SimpleNamespace = args
         self.id: Optional[str] = self.get_id(self.args.url)
+        if not self.disneysite:
+            self._regions = ["AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX", "NI", "PA", "PE", "PY", "SV", "UY", "VE"]
         self.quality: str = args.quality
         self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
         self.audios: Optional[set[str]] = self.args_to_set(args.alang)
@@ -37,9 +39,9 @@ class Data:
         self.seasons_in: Optional[list[int]] = self.seasons_to_list(args.seasons)
         self.mlang: Optional[str] = args.mlang
 
-        self.seasons = dict()
-        self.regions_all = list()
-        self.regions = list()
+        self.seasons: dict[str, str] = dict()
+        self.regions_all: list[str] = list()
+        self.regions: list[str] = list()
         self.change: int = 0
         self.header: str = ""
         self.last_message: str = ""
@@ -95,7 +97,7 @@ class Data:
         if self.checked[0] != self.checked[1]:
             front: str = f"🕐 Checking regions...   {self.generate_progress_bar(self.checked[0], self.checked[1])}   {self.checked[0]}/{self.checked[1]} ({self.checked[0]/self.checked[1]:.0%})\n\n{self.header}\n\n"
         else:
-            front: str = f"✅ Checked {self.checked[0]} (100%)\n\n{self.header}\n\n"
+            front = f"✅ Checked {self.checked[0]} (100%)\n\n{self.header}\n\n"
 
         available: str = f"Available in {len(self.regions)} regions\n\n"
 
@@ -160,7 +162,7 @@ class Data:
                 for video in data_full:
                     video_data = video["mediaMetadata"]
                     quality: str = video_data["format"]
-                    audios: set = set(
+                    audios: set[str] = set(
                         (
                             x["language"]
                             if "-" not in x["language"]
@@ -168,7 +170,7 @@ class Data:
                         )
                         for x in video_data["audioTracks"]
                     )
-                    subtitles: set = set(
+                    subtitles: set[str] = set(
                         (
                             x["language"]
                             if "-" not in x["language"]
@@ -177,11 +179,13 @@ class Data:
                         for x in video_data["captions"]
                         if x["trackType"] in ("NORMAL", "SDH")
                     )
-                    subtitles_forced: set = set(
+                    subtitles_forced: set[str] = set(
                         x["language"]
                         for x in video_data["captions"]
                         if x["trackType"] == "FORCED"
                     )
+                    if self.quality and self.quality.upper() != quality:
+                        continue
                     if self.audios and self.audios.issubset(audios):
                         audio += 1
                     if self.subtitles and self.subtitles.issubset(subtitles):
@@ -208,7 +212,7 @@ class Data:
                 )
             ) as req:
                 subtitles = set()
-                subtitles_forced = set()
+                subtitles_forced: set[str] = set()
 
                 if self.series:
                     try:
@@ -272,7 +276,7 @@ class Data:
                                 for x in video_data["captions"]
                                 if x["trackType"] != "FORCED"
                             )
-                            subtitles_forced: set = set(
+                            subtitles_forced = set(
                                 x["language"]
                                 for x in video_data["captions"]
                                 if x["trackType"] == "FORCED"
@@ -315,7 +319,7 @@ class DisneyPlus:
     def __init__(self, bot) -> None:
         self.session = None
         self.bot = bot
-        self._regions = list()
+        self._regions: list[str] = list()
 
     async def init_session(self, bot) -> None:
         self.session = aiohttp.ClientSession(
@@ -327,18 +331,20 @@ class DisneyPlus:
             }
         )
 
-        async with self.session.get(
-            "https://cdn.registerdisney.go.com/jgc/v8/client/DTCI-DISNEYPLUS.GC.WEB-PROD/configuration/site",
-        ) as req:
-            try:
-                self._regions = (
-                    (await req.json())
-                    .get("data", {})
-                    .get("compliance", {})
-                    .get("countries", [])
-                )
-            except Exception as e:
-                self.bot.logging.error(f"Failed to get regions {e}")
+        self._regions = ["AD", "AG", "AI", "AL", "AR", "AS", "AT", "AU", "AW", "BA", "BB", "BE", "BG", "BL", "BM", "BO", "BQ", "BR", "BS", "BZ", "CA", "CC", "CH", "CK", "CL", "CO", "CR", "CW", "CX", "CZ", "DE", "DK", "DM", "DO", "EC", "EE", "ES", "FI", "FK", "FO", "FR", "GB", "GD", "GF", "GG", "GI", "GL", "GP", "GR", "GS", "GT", "GU", "GY", "HK", "HN", "HR", "HT", "HU", "IE", "IM", "IO", "IS", "IT", "JE", "JM", "JP", "KN", "KR", "KY", "LC", "LI", "LT", "LU", "LV", "MC", "ME", "MF", "MH", "MK", "MP", "MQ", "MS", "MT", "MU", "MX", "NC", "NF", "NI", "NL", "NO", "NU", "NZ", "PA", "PE", "PF", "PL", "PM", "PN", "PR", "PT", "PY", "RE", "RO", "RS", "SE", "SG", "SH", "SI", "SJ", "SK", "SM", "SR", "SV", "SX", "TC", "TF", "TK", "TR", "TT", "TW", "UM", "US", "UY", "VA", "VC", "VE", "VG", "VI", "WF", "YT"] # dsnp
+
+        #async with self.session.get(
+        #    "https://cdn.registerdisney.go.com/jgc/v9/client/DTCI-DISNEYPLUS.GC.WEB-PROD/configuration/site",
+        #) as req:
+        #    try:
+        #        self._regions = (
+        #            (await req.json())
+        #            .get("data", {})
+        #            .get("compliance", {})
+        #            .get("countries", [])
+        #        )
+        #    except Exception as e:
+        #        self.bot.logging.error(f"Failed to get regions {e}")
 
     @property
     def regions(self) -> list[str]:
