@@ -27,8 +27,6 @@ class Data:
 
         self.args: SimpleNamespace = args
         self.id: Optional[str] = self.get_id(self.args.url)
-        if not self.disneysite:
-            self._regions = ["AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX", "NI", "PA", "PE", "PY", "SV", "UY", "VE"]
         self.quality: str = args.quality
         self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
         self.audios: Optional[set[str]] = self.args_to_set(args.alang)
@@ -304,9 +302,9 @@ class Data:
 
                     except Exception as e:
                         self.bot.logging.error(f"Failed to get series info {e}")
-
+                change_ = 6 if self.series else 11
                 if (
-                    self.change == 1 or self.change > 6 or region == regions[-1].upper()
+                    self.change == 1 or self.change > change_ or region == regions[-1].upper()
                 ) and self.regions:
                     message: str = self.render
                     if message != self.last_message:
@@ -351,6 +349,8 @@ class DisneyPlus:
         return self._regions
 
     async def get_available(self, data: Data) -> None:
+        if not self.disneysite:
+            self._regions = ["AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX", "NI", "PA", "PE", "PY", "SV", "UY", "VE"]
         await data.get_data(self._regions, self.session)
         if not data.regions:
             await edit_text(data.message, "Not available in any region.")
