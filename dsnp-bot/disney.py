@@ -76,6 +76,9 @@ class Data:
                 id = m.group("id")
                 break
 
+        if hasattr(self, "disneysite"):
+            self.bot.logging.error("Failed to url!")
+
         return id
 
     def generate_progress_bar(self, value, maximum):
