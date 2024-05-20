@@ -27,6 +27,9 @@ class Data:
 
         self.args: SimpleNamespace = args
         self.id: Optional[str] = self.get_id(self.args.url)
+        if not hasattr(self, "disneysite"):
+            self.bot.logging.error("Failed parse url!")
+            raise Exception("Failed parse url!")
         if not self.disneysite:
             self._regions = ["AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX", "NI", "PA", "PE", "PY", "SV", "UY", "VE"]
         self.quality: str = args.quality
@@ -75,9 +78,6 @@ class Data:
                 self.disneysite: bool = m.group("site") == "disneyplus"
                 id = m.group("id")
                 break
-
-        if hasattr(self, "disneysite"):
-            self.bot.logging.error("Failed parse url!")
 
         return id
 
