@@ -191,6 +191,7 @@ async def send_check(message: types.Message):
             sent_message: types.Message = await message.reply("Checking...")
             if "browse/entity" in args.url:
                args.url =  await bot.disney.get_redirect_url(args.url)
+               bot.logging.info(f"Redirected URL: {args.url}")
             try:
                 data = Data(args, sent_message, bot)
                 if data.id:
