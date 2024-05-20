@@ -77,7 +77,7 @@ class Data:
                 break
 
         if hasattr(self, "disneysite"):
-            self.bot.logging.error("Failed to url!")
+            self.bot.logging.error("Failed parse url!")
 
         return id
 
