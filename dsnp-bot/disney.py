@@ -350,6 +350,20 @@ class DisneyPlus:
     def regions(self) -> list[str]:
         return self._regions
 
+    async def get_redirect_url(self, url):
+        async with self.session.get(
+            f"https://api.redirect-checker.net/?url={url}"
+        ) as req:
+            if req.get("result") != "success":
+                self.bot.logging.error("Failed to get url!")
+            try:
+                redirect_url = req["data"][0]["response"]["info"]["redirect_url"]
+
+                return redirect_url
+            except Exception:
+                self.bot.logging.error("Failed to get url!")
+
+
     async def get_available(self, data: Data) -> None:
         await data.get_data(self._regions, self.session)
         if not data.regions:
