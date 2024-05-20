@@ -354,6 +354,7 @@ class DisneyPlus:
         async with self.session.get(
             f"https://api.redirect-checker.net/?url={url}"
         ) as req:
+            req = await req.json()
             if req.get("result") != "success":
                 self.bot.logging.error("Failed to get url!")
             try:
