@@ -84,7 +84,7 @@ async def send_groupid(message: types.Message):
     await log("groupid", message)
 
     await message.reply(
-        f"<b>Group ID: {message['chat']['id']}</b>",
+        f"<b>Group ID: <code>{message['chat']['id']}</code></b>",
         parse_mode="html",
         disable_web_page_preview=True,
     )
@@ -98,7 +98,7 @@ async def send_userid(message: types.Message):
     await log("userid", message)
 
     await message.reply(
-        f"<b>Your User ID: {message['from']['id']}</b>",
+        f"<b>Your User ID: <code>{message['from']['id']}</code></b>",
         parse_mode="html",
         disable_web_page_preview=True,
     )
