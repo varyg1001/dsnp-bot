@@ -228,11 +228,14 @@ class Data:
                             self.regions_all.append(region)
                             self.regions.append(region)
                             if not self.header:
-                                title = data_full["episodes"]["videos"][0]["text"][
-                                    "title"
-                                ]
-                                self.header = f'<a href="https://{["starplus", "disneyplus"][self.disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
-                            eps: list = [
+                                try:
+                                    title = data_full["episodes"]["videos"][0]["text"][
+                                        "title"
+                                    ]
+                                    self.header = f'<a href="https://{["starplus", "disneyplus"][self.disneysite]}.com/series/{title["slug"]["series"]["default"]["content"]}/{self.id}">{title["full"]["series"]["default"]["content"]}</a>'
+                                except IndexError:
+                                    pass
+                            eps = [
                                 (
                                     x["seasonSequenceNumber"],
                                     x["episodes_meta"]["hits"],

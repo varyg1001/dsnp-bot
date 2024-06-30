@@ -76,6 +76,34 @@ async def send_welcome(message: types.Message):
     )
 
 
+@dp.message_handler(commands=["groupid"])
+async def send_groupid(message: types.Message):
+    """
+    Sends the group ID to the user.
+    """
+    await log("groupid", message)
+
+    await message.reply(
+        f"<b>Group ID: {message['chat']['id']}</b>",
+        parse_mode="html",
+        disable_web_page_preview=True,
+    )
+
+
+@dp.message_handler(commands=["userid"])
+async def send_userid(message: types.Message):
+    """
+    Sends the user ID to the user.
+    """
+    await log("userid", message)
+
+    await message.reply(
+        f"<b>Your User ID: {message['from']['id']}</b>",
+        parse_mode="html",
+        disable_web_page_preview=True,
+    )
+
+
 @dp.message_handler(commands=["usage", "help"])
 async def send_help(message: types.Message):
     """
@@ -190,8 +218,8 @@ async def send_check(message: types.Message):
             bot.logging.info(f"URL: {args.url}")
             sent_message: types.Message = await message.reply("Checking...")
             if "browse/entity" in args.url:
-               args.url =  await bot.disney.get_redirect_url(args.url)
-               bot.logging.info(f"Redirected URL: {args.url}")
+                args.url = await bot.disney.get_redirect_url(args.url)
+                bot.logging.info(f"Redirected URL: {args.url}")
             try:
                 data = Data(args, sent_message, bot)
                 if data.id:
