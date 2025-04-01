@@ -31,7 +31,26 @@ class Data:
             self.bot.logging.error("Failed parse url!")
             raise Exception("Failed parse url!")
         if not self.disneysite:
-            self._regions = ["AR", "BO", "BR", "CL", "CO", "CR", "DO", "EC", "GT", "HN", "MX", "NI", "PA", "PE", "PY", "SV", "UY", "VE"]
+            self._regions = [
+                "AR",
+                "BO",
+                "BR",
+                "CL",
+                "CO",
+                "CR",
+                "DO",
+                "EC",
+                "GT",
+                "HN",
+                "MX",
+                "NI",
+                "PA",
+                "PE",
+                "PY",
+                "SV",
+                "UY",
+                "VE",
+            ]
         self.quality: str = args.quality
         self.subtitles: Optional[set[str]] = self.args_to_set(args.slang)
         self.audios: Optional[set[str]] = self.args_to_set(args.alang)
@@ -219,8 +238,15 @@ class Data:
 
                 if self.series:
                     try:
+                        try:
+                            res_json = await req.json()
+                        except Exception as e:
+                            self.bot.logging.error(f"Failed to decode series info {e}")
+                            self.bot.logging.error(await req.text)
+                            res_json = {}
+       
                         data_full = (
-                            (await req.json())
+                            res_json
                             .get("data", {})
                             .get("DmcSeriesBundle", {})
                         )
@@ -261,8 +287,15 @@ class Data:
 
                 else:
                     try:
+                        try:
+                            res_json = await req.json()
+                        except Exception as e:
+                            self.bot.logging.error(f"Failed to decode series info {e}")
+                            self.bot.logging.error(req.text)
+                            res_json = {}
+                        
                         data = (
-                            (await req.json())
+                            res_json
                             .get("data", {})
                             .get("DmcVideoBundle", {})
                             .get("video", {})
@@ -312,7 +345,9 @@ class Data:
                         self.bot.logging.error(f"Failed to get series info {e}")
                 change_ = 6 if self.series else 11
                 if (
-                    self.change == 1 or self.change > change_ or region == regions[-1].upper()
+                    self.change == 1
+                    or self.change > change_
+                    or region == regions[-1].upper()
                 ) and self.regions:
                     message: str = self.render
                     if message != self.last_message:
@@ -337,11 +372,142 @@ class DisneyPlus:
             }
         )
 
-        self._regions = ["AD", "AG", "AI", "AL", "AR", "AS", "AT", "AU", "AW", "BA", "BB", "BE", "BG", "BL", "BM", "BO", "BQ", "BR", "BS", "BZ", "CA", "CC", "CH", "CK", "CL", "CO", "CR", "CW", "CX", "CZ", "DE", "DK", "DM", "DO", "EC", "EE", "ES", "FI", "FK", "FO", "FR", "GB", "GD", "GF", "GG", "GI", "GL", "GP", "GR", "GS", "GT", "GU", "GY", "HK", "HN", "HR", "HT", "HU", "IE", "IM", "IO", "IS", "IT", "JE", "JM", "JP", "KN", "KR", "KY", "LC", "LI", "LT", "LU", "LV", "MC", "ME", "MF", "MH", "MK", "MP", "MQ", "MS", "MT", "MU", "MX", "NC", "NF", "NI", "NL", "NO", "NU", "NZ", "PA", "PE", "PF", "PL", "PM", "PN", "PR", "PT", "PY", "RE", "RO", "RS", "SE", "SG", "SH", "SI", "SJ", "SK", "SM", "SR", "SV", "SX", "TC", "TF", "TK", "TR", "TT", "TW", "UM", "US", "UY", "VA", "VC", "VE", "VG", "VI", "WF", "YT"] # dsnp
+        self._regions = [
+            "AD",
+            "AG",
+            "AI",
+            "AL",
+            "AR",
+            "AS",
+            "AT",
+            "AU",
+            "AW",
+            "BA",
+            "BB",
+            "BE",
+            "BG",
+            "BL",
+            "BM",
+            "BO",
+            "BQ",
+            "BR",
+            "BS",
+            "BZ",
+            "CA",
+            "CC",
+            "CH",
+            "CK",
+            "CL",
+            "CO",
+            "CR",
+            "CW",
+            "CX",
+            "CZ",
+            "DE",
+            "DK",
+            "DM",
+            "DO",
+            "EC",
+            "EE",
+            "ES",
+            "FI",
+            "FK",
+            "FO",
+            "FR",
+            "GB",
+            "GD",
+            "GF",
+            "GG",
+            "GI",
+            "GL",
+            "GP",
+            "GR",
+            "GS",
+            "GT",
+            "GU",
+            "GY",
+            "HK",
+            "HN",
+            "HR",
+            "HT",
+            "HU",
+            "IE",
+            "IM",
+            "IO",
+            "IS",
+            "IT",
+            "JE",
+            "JM",
+            "JP",
+            "KN",
+            "KR",
+            "KY",
+            "LC",
+            "LI",
+            "LT",
+            "LU",
+            "LV",
+            "MC",
+            "ME",
+            "MF",
+            "MH",
+            "MK",
+            "MP",
+            "MQ",
+            "MS",
+            "MT",
+            "MU",
+            "MX",
+            "NC",
+            "NF",
+            "NI",
+            "NL",
+            "NO",
+            "NU",
+            "NZ",
+            "PA",
+            "PE",
+            "PF",
+            "PL",
+            "PM",
+            "PN",
+            "PR",
+            "PT",
+            "PY",
+            "RE",
+            "RO",
+            "RS",
+            "SE",
+            "SG",
+            "SH",
+            "SI",
+            "SJ",
+            "SK",
+            "SM",
+            "SR",
+            "SV",
+            "SX",
+            "TC",
+            "TF",
+            "TK",
+            "TR",
+            "TT",
+            "TW",
+            "UM",
+            "US",
+            "UY",
+            "VA",
+            "VC",
+            "VE",
+            "VG",
+            "VI",
+            "WF",
+            "YT",
+        ]  # dsnp
 
-        #async with self.session.get(
+        # async with self.session.get(
         #    "https://cdn.registerdisney.go.com/jgc/v9/client/DTCI-DISNEYPLUS.GC.WEB-PROD/configuration/site",
-        #) as req:
+        # ) as req:
         #    try:
         #        self._regions = (
         #            (await req.json())
@@ -369,7 +535,6 @@ class DisneyPlus:
                 return redirect_url
             except Exception:
                 self.bot.logging.error("Failed to get url!")
-
 
     async def get_available(self, data: Data) -> None:
         await data.get_data(self._regions, self.session)
