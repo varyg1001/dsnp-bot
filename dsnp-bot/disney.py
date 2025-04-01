@@ -150,7 +150,7 @@ class Data:
 
     async def get_lang(self, session, region, id):
         async with session.get(
-            f"https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1"
+            f"https://disney.content.edge.bamgrid.com/svc/content/DmcEpisodes/version/6.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/seasonId/{id}/pageSize/-1/page/1"
         ) as req:
             audio: int = 0
             forced: int = 0
@@ -206,7 +206,7 @@ class Data:
             self.checked[0] = n
             region = region.upper()
             async with session.get(
-                "https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/5.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(
+                "https://{site}.content.edge.bamgrid.com/svc/content/{type}/version/6.1/region/{region}/audience/k-false,l-true/maturity/1899/language/en/encoded{encoded}/{id}".format(
                     type=["DmcVideoBundle", "DmcSeriesBundle"][self.series],
                     site=["star", "disney"][self.disneysite],
                     region=region,
