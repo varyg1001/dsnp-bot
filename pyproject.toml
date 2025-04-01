@@ -1,16 +1,23 @@
-[tool.poetry]
+[project]
 name = "dsnpbot"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
-authors = ["varyg <88599103+varyg1001@users.noreply.github.com>"]
+authors = [
+    { name = "varyg"},
+]
 readme = "README.md"
+requires-python = ">=3.11"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-aiogram = "^2.25.1"
-aiohttp = "^3.8.4"
-setuptools = "^78.1.0"
+dependencies = [
+    "aiogram>=3.0.0,<4.0.0",
+    "aiohttp>=3.8.4,<4.0.0",
+    "setuptools>=78.1.0,<79.0.0"
+]
 
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0"
+]
 
 [build-system]
 requires = ["poetry-core"]
