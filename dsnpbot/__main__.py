@@ -218,8 +218,9 @@ async def send_check(message: types.Message):
             bot.logging.info(f"URL: {args.url}")
             sent_message: types.Message = await message.reply("Checking...")
             if "browse/entity" in args.url:
-                args.url = await bot.disney.get_redirect_url(args.url)
-                bot.logging.info(f"Redirected URL: {args.url}")
+                await sent_message.edit_text("Error: Entity url detected, only old url can be used!")
+                bot.logging.warning("Error: Entity url detected, only old url can be used!")
+                return
             try:
                 data = Data(args, sent_message, bot)
                 if data.id:
