@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import argparse
 import logging
+import asyncio
 
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot, Dispatcher, types
 
 from disney import DisneyPlus, Data
 from config import token, users, groups
@@ -239,7 +240,11 @@ async def send_check(message: types.Message):
         await message.reply("Error: No usable input!")
 
 
-if __name__ == "__main__":
+async def main():
     bot.logging = logging.getLogger("DSNPbot")
     bot.disney = DisneyPlus(bot)
-    executor.start_polling(dp, on_startup=bot.disney.init_session)
+    await bot.disney.init_session()
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
